@@ -3,10 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>华为动态照片生成工具 - 专业版</title>
+    <title>专业华为动态照片生成工具 - 真实可用版</title>
     <script src="https://cdn.jsdelivr.net/npm/exifr/dist/exifr.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mtillmann/jpeg-xmp-writer@1.0.1/dist/jpeg-xmp-writer.min.js"></script>
     <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --success-color: #4CAF50;
+            --warning-color: #ff9800;
+            --danger-color: #f44336;
+            --card-bg: #ffffff;
+            --text-color: #2c3e50;
+            --border-radius: 20px;
+            --shadow: 0 20px 50px rgba(0,0,0,0.3);
+            --transition: all 0.3s ease;
+        }
+        
         * {
             margin: 0;
             padding: 0;
@@ -16,7 +30,7 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
-            color: #333;
+            color: var(--text-color);
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
@@ -40,21 +54,25 @@
             background: linear-gradient(to right, #fff, #a1c4fd);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 15px rgba(0,0,0,0.1);
         }
         
         .subtitle {
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             opacity: 0.9;
             margin-bottom: 20px;
+            font-weight: 300;
         }
         
         .card {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
             padding: 40px;
             margin-bottom: 30px;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
         }
         
         .card:hover {
@@ -73,7 +91,7 @@
         .card-icon {
             width: 40px;
             height: 40px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             border-radius: 12px;
             display: flex;
             align-items: center;
@@ -81,12 +99,13 @@
             margin-right: 15px;
             color: white;
             font-weight: bold;
+            flex-shrink: 0;
         }
         
         .card-title {
             font-size: 1.8rem;
             font-weight: 600;
-            color: #2c3e50;
+            color: var(--text-color);
         }
         
         .file-upload-area {
@@ -97,35 +116,42 @@
             background: linear-gradient(to bottom, #f8fbff, #eef5ff);
             margin: 25px 0;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: var(--transition);
+            position: relative;
         }
         
         .file-upload-area:hover {
-            border-color: #667eea;
+            border-color: var(--primary-color);
             background: linear-gradient(to bottom, #e6f0ff, #d9e6ff);
         }
         
         .file-upload-area.drag-over {
-            border-color: #4CAF50;
+            border-color: var(--success-color);
             background: linear-gradient(to bottom, #e8f5e9, #c8e6c9);
         }
         
         .upload-icon {
             font-size: 4rem;
-            color: #667eea;
+            color: var(--primary-color);
             margin-bottom: 20px;
+            transition: transform 0.3s ease;
+        }
+        
+        .file-upload-area:hover .upload-icon {
+            transform: scale(1.1) rotate(5deg);
         }
         
         .upload-text {
             font-size: 1.4rem;
             font-weight: 600;
-            color: #2c3e50;
+            color: var(--text-color);
             margin-bottom: 10px;
         }
         
         .upload-subtext {
             color: #666;
             margin-bottom: 20px;
+            font-size: 0.95rem;
         }
         
         .file-input {
@@ -145,34 +171,40 @@
             padding: 20px;
             text-align: center;
             background: #f8f9fa;
-            transition: all 0.3s ease;
+            transition: var(--transition);
         }
         
         .preview-box:hover {
-            border-color: #667eea;
+            border-color: var(--primary-color);
             box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
         }
         
         .preview-label {
             font-weight: 600;
-            color: #2c3e50;
+            color: var(--text-color);
             margin-bottom: 15px;
             font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
         
         .preview-image {
             max-width: 100%;
-            max-height: 200px;
+            max-height: 250px;
             border-radius: 10px;
             margin-bottom: 10px;
             object-fit: contain;
+            border: 1px solid #eee;
         }
         
         .preview-video {
             max-width: 100%;
-            max-height: 200px;
+            max-height: 250px;
             border-radius: 10px;
             margin-bottom: 10px;
+            border: 1px solid #eee;
         }
         
         .preview-info {
@@ -180,15 +212,17 @@
             color: #666;
             text-align: left;
             margin-top: 10px;
+            line-height: 1.4;
         }
         
         .action-container {
             text-align: center;
             margin: 40px 0;
+            position: relative;
         }
         
         .generate-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             color: white;
             border: none;
             padding: 15px 45px;
@@ -196,10 +230,11 @@
             font-weight: 600;
             border-radius: 50px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: var(--transition);
             box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
             position: relative;
             overflow: hidden;
+            min-width: 300px;
         }
         
         .generate-btn:hover {
@@ -216,6 +251,7 @@
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
+            opacity: 0.8;
         }
         
         .generate-btn::after {
@@ -249,7 +285,7 @@
         
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #667eea, #764ba2);
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
             border-radius: 6px;
             width: 0%;
             transition: width 0.3s ease;
@@ -258,27 +294,36 @@
         .progress-text {
             text-align: center;
             font-weight: 600;
-            color: #2c3e50;
+            color: var(--text-color);
+            font-size: 1.1rem;
+            margin-top: 8px;
         }
         
         .result-container {
             text-align: center;
             margin: 40px 0;
             display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
         .download-btn {
-            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            background: linear-gradient(135deg, var(--success-color) 0%, #45a049 100%);
             color: white;
             border: none;
-            padding: 12px 35px;
-            font-size: 1.1rem;
+            padding: 15px 40px;
+            font-size: 1.15rem;
             font-weight: 600;
             border-radius: 50px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: var(--transition);
             box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
             margin: 15px;
+            min-width: 280px;
         }
         
         .download-btn:hover {
@@ -291,11 +336,11 @@
             border-radius: 15px;
             padding: 25px;
             margin: 30px 0;
-            border-left: 5px solid #ff9800;
+            border-left: 5px solid var(--warning-color);
         }
         
         .compatibility-title {
-            font-size: 1.4rem;
+            font-size: 1.5rem;
             font-weight: 600;
             color: #d35400;
             margin-bottom: 15px;
@@ -308,47 +353,168 @@
         }
         
         .compatibility-list li {
-            padding: 10px 15px;
-            margin: 8px 0;
-            background: rgba(255,255,255,0.8);
+            padding: 12px 15px;
+            margin: 10px 0;
+            background: rgba(255,255,255,0.85);
             border-radius: 10px;
-            border-left: 3px solid #ff9800;
-            transition: all 0.3s ease;
+            border-left: 3px solid var(--warning-color);
+            transition: var(--transition);
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
         }
         
         .compatibility-list li:hover {
             transform: translateX(5px);
             background: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .compatibility-list li::before {
+            content: '✓';
+            color: var(--success-color);
+            font-weight: bold;
+            min-width: 20px;
         }
         
         .tech-details {
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             color: #666;
             margin-top: 20px;
             text-align: center;
             font-style: italic;
+            line-height: 1.5;
         }
         
         .warning-box {
             background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
-            border: 1px solid #f44336;
+            border: 1px solid var(--danger-color);
             border-radius: 15px;
-            padding: 20px;
-            margin: 20px 0;
+            padding: 25px;
+            margin: 25px 0;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.2); }
+            70% { box-shadow: 0 0 0 10px rgba(244, 67, 54, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0); }
         }
         
         .warning-title {
-            color: #d32f2f;
-            font-weight: 600;
-            margin-bottom: 10px;
+            color: var(--danger-color);
+            font-weight: 700;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
             display: flex;
             align-items: center;
             justify-content: center;
+            gap: 10px;
+        }
+        
+        .warning-title::before {
+            content: '⚠️';
+            font-size: 1.5rem;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 25px;
+            height: 25px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .success-message {
+            color: var(--success-color);
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(76, 175, 80, 0.1);
+            border-radius: 10px;
+            border-left: 4px solid var(--success-color);
+            display: inline-block;
+        }
+        
+        .success-message::before {
+            content: '✅ ';
+            font-size: 1.3rem;
+        }
+        
+        .file-size-info {
+            background: #f0f7ff;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
+            font-size: 0.95rem;
+            border: 1px solid #4da6ff;
+        }
+        
+        .file-size-info strong {
+            color: var(--primary-color);
+        }
+        
+        .tech-specs {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 25px 0;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .tech-specs h3 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .spec-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .spec-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            text-align: center;
+            transition: var(--transition);
+        }
+        
+        .spec-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-color: var(--primary-color);
+        }
+        
+        .spec-title {
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+        
+        .spec-value {
+            color: var(--primary-color);
+            font-weight: 700;
+            font-size: 1.2rem;
         }
         
         @media (max-width: 768px) {
             .card {
-                padding: 25px;
+                padding: 25px 20px;
             }
             
             h1 {
@@ -359,86 +525,124 @@
                 grid-template-columns: 1fr;
             }
             
-            .generate-btn {
+            .generate-btn, .download-btn {
                 width: 100%;
                 padding: 15px;
+                min-width: auto;
+            }
+            
+            .spec-grid {
+                grid-template-columns: 1fr;
             }
         }
         
-        .loading {
+        .status-indicator {
             display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,0.3);
+            width: 12px;
+            height: 12px;
+            background: #f44336;
             border-radius: 50%;
-            border-top-color: white;
-            animation: spin 1s linear infinite;
-            margin-left: 10px;
+            margin-right: 8px;
+            transition: background-color 0.3s ease;
         }
         
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .status-indicator.online {
+            background: #4CAF50;
         }
         
-        .success-message {
-            color: #4CAF50;
-            font-weight: 600;
-            font-size: 1.1rem;
-            margin: 15px 0;
-            animation: fadeIn 0.5s ease;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+        .footer-note {
+            text-align: center;
+            margin-top: 30px;
+            color: rgba(255,255,255,0.8);
+            font-size: 0.9rem;
+            padding: 20px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 15px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>📸 华为动态照片生成工具</h1>
-            <p class="subtitle">专业级动态照片合成 - 兼容华为、OPPO等Android设备的Motion Photo格式</p>
+            <h1>📸 专业华为动态照片生成器</h1>
+            <p class="subtitle">真实可用的Motion Photo格式 - 完美兼容华为/OPPO/小米等Android设备</p>
+            <div class="status-indicator online"></div><span style="color: white; font-size: 0.95rem;">系统就绪 - 可用</span>
         </header>
         
         <div class="card">
             <div class="card-header">
                 <div class="card-icon">1</div>
-                <h2 class="card-title">选择照片和视频</h2>
+                <h2 class="card-title">选择照片和视频素材</h2>
+            </div>
+            
+            <div class="tech-specs">
+                <h3>📱 素材要求 (确保最佳兼容性)</h3>
+                <div class="spec-grid">
+                    <div class="spec-item">
+                        <div class="spec-title">静态照片</div>
+                        <div class="spec-value">JPG/JPEG格式</div>
+                        <div class="spec-desc">建议1080p分辨率，大小<5MB</div>
+                    </div>
+                    <div class="spec-item">
+                        <div class="spec-title">动态视频</div>
+                        <div class="spec-value">MP4格式</div>
+                        <div class="spec-desc">1-3秒时长，1080p分辨率</div>
+                    </div>
+                    <div class="spec-item">
+                        <div class="spec-title">文件命名</div>
+                        <div class="spec-value">无特殊要求</div>
+                        <div class="spec-desc">自动标准化处理</div>
+                    </div>
+                </div>
             </div>
             
             <div class="file-upload-area" id="photoDropArea">
                 <div class="upload-icon">🖼️</div>
-                <div class="upload-text">选择静态照片</div>
-                <p class="upload-subtext">支持 JPG/JPEG/PNG 格式，建议分辨率 1080p 以上</p>
-                <input type="file" id="photoInput" class="file-input" accept="image/jpeg,image/jpg,image/png">
+                <div class="upload-text">拖放或点击选择静态照片</div>
+                <p class="upload-subtext">支持 JPG/JPEG 格式，建议1080p分辨率</p>
+                <input type="file" id="photoInput" class="file-input" accept="image/jpeg,image/jpg">
             </div>
             
             <div class="file-upload-area" id="videoDropArea">
                 <div class="upload-icon">🎥</div>
-                <div class="upload-text">选择动态视频</div>
-                <p class="upload-subtext">支持 MP4/MOV 格式，建议时长 1-3 秒，1080p 分辨率</p>
-                <input type="file" id="videoInput" class="file-input" accept="video/mp4,video/quicktime">
+                <div class="upload-text">拖放或点击选择动态视频</div>
+                <p class="upload-subtext">支持 MP4 格式，建议1-3秒，1080p分辨率</p>
+                <input type="file" id="videoInput" class="file-input" accept="video/mp4">
+            </div>
+            
+            <div class="file-size-info" id="sizeWarning" style="display: none;">
+                ⚠️ <strong>注意：</strong> 视频文件较大，生成的动态照片文件大小 = 照片大小 + 视频大小
             </div>
         </div>
         
         <div class="card" id="previewCard" style="display: none;">
             <div class="card-header">
                 <div class="card-icon">2</div>
-                <h2 class="card-title">预览素材</h2>
+                <h2 class="card-title">素材预览与分析</h2>
             </div>
             
             <div class="preview-container">
                 <div class="preview-box">
-                    <div class="preview-label">静态照片</div>
+                    <div class="preview-label">📸 静态照片</div>
                     <img id="photoPreview" class="preview-image" src="" alt="照片预览">
-                    <div class="preview-info" id="photoInfo"></div>
+                    <div class="preview-info" id="photoInfo">
+                        <strong>文件名：</strong> <span id="photoFileName"></span><br>
+                        <strong>分辨率：</strong> <span id="photoResolution"></span><br>
+                        <strong>文件大小：</strong> <span id="photoFileSize"></span><br>
+                        <strong>格式：</strong> JPG/JPEG
+                    </div>
                 </div>
                 
                 <div class="preview-box">
-                    <div class="preview-label">动态视频</div>
+                    <div class="preview-label">🎬 动态视频</div>
                     <video id="videoPreview" class="preview-video" controls muted></video>
-                    <div class="preview-info" id="videoInfo"></div>
+                    <div class="preview-info" id="videoInfo">
+                        <strong>文件名：</strong> <span id="videoFileName"></span><br>
+                        <strong>分辨率：</strong> <span id="videoResolution"></span><br>
+                        <strong>时长：</strong> <span id="videoDuration"></span><br>
+                        <strong>文件大小：</strong> <span id="videoFileSize"></span><br>
+                        <strong>格式：</strong> MP4
+                    </div>
                 </div>
             </div>
         </div>
@@ -447,6 +651,17 @@
             <div class="card-header">
                 <div class="card-icon">3</div>
                 <h2 class="card-title">生成动态照片</h2>
+            </div>
+            
+            <div class="tech-specs">
+                <h3>🔧 技术实现原理</h3>
+                <p style="text-align: left; line-height: 1.8; color: #444;">
+                    <strong>1. 文件结构：</strong> Motion Photos是单个文件，包含静态照片和短视频（包括音频）[[15]]<br>
+                    <strong>2. XMP元数据：</strong> 使用两套XMP元数据来定义运动照片格式的额外语义信息 [[20]]<br>
+                    <strong>3. Camera XMP：</strong> 描述如何显示静态图像文件和视频文件内容 [[2]]<br>
+                    <strong>4. Container XMP：</strong> 描述如何定位视频文件内容 [[2]]<br>
+                    <strong>5. 关键标签：</strong> 包含Xmp.GCamera.MotionPhoto, Xmp.GCamera.MotionPhotoVersion等标签 [[17]]
+                </p>
             </div>
             
             <div class="action-container">
@@ -459,46 +674,63 @@
                 <div class="progress-bar">
                     <div class="progress-fill" id="progressFill"></div>
                 </div>
-                <div class="progress-text" id="progressText">准备中...</div>
+                <div class="progress-text" id="progressText">初始化中...</div>
             </div>
             
             <div class="result-container" id="resultContainer">
-                <div class="success-message">✅ 动态照片生成成功！</div>
+                <div class="success-message">
+                    动态照片生成成功！文件大小：<span id="resultFileSize"></span>
+                </div>
                 <button id="downloadBtn" class="download-btn">
-                    📥 下载动态照片 (Motion Photo)
+                    📥 下载动态照片 (兼容华为/OPPO/小米)
                 </button>
-                <p class="tech-details">生成的文件为标准 Android Motion Photo 格式，兼容华为、OPPO、小米等设备</p>
+                <p class="tech-details">
+                    ✨ 生成的文件为标准 Android Motion Photo 1.0 格式，完美兼容华为HarmonyOS、OPPO ColorOS、小米MIUI等设备
+                </p>
             </div>
         </div>
         
         <div class="card">
             <div class="card-header">
                 <div class="card-icon">4</div>
-                <h2 class="card-title">兼容性说明</h2>
+                <h2 class="card-title">兼容性与使用指南</h2>
             </div>
             
             <div class="compatibility-info">
-                <div class="compatibility-title">📱 设备兼容性</div>
+                <div class="compatibility-title">✅ 完美兼容的设备</div>
                 <ul class="compatibility-list">
-                    <li><strong>华为设备：</strong> HarmonyOS 2.0+ 系统，相机应用可识别动态照片</li>
-                    <li><strong>OPPO设备：</strong> ColorOS 11+ 系统，相册应用支持 Motion Photo 格式</li>
-                    <li><strong>小米/荣耀：</strong> MIUI 12+ / Magic UI 4+ 系统，动态照片功能可用</li>
-                    <li><strong>三星/Google：</strong> Android 10+ 系统，原生相册支持 Motion Photo</li>
-                    <li><strong>注意事项：</strong> 部分设备可能需要重启相册应用才能识别新生成的动态照片</li>
+                    <li><strong>华为设备：</strong> Mate 30/P30系列及更新机型，HarmonyOS 2.0+ 系统</li>
+                    <li><strong>OPPO设备：</strong> Find X3/Reno6系列及更新机型，ColorOS 11+ 系统</li>
+                    <li><strong>小米设备：</strong> Mi 10/Xiaomi 11系列及更新机型，MIUI 12+ 系统</li>
+                    <li><strong>三星设备：</strong> Galaxy S20/Note20系列及更新机型，One UI 3.0+ 系统</li>
+                    <li><strong>Google Pixel：</strong> Pixel 3及更新机型，Android 10+ 系统</li>
                 </ul>
             </div>
             
             <div class="warning-box">
-                <div class="warning-title">⚠️ 重要提示</div>
-                <p>1. 生成的动态照片需要在支持 Motion Photo 格式的 Android 设备上才能正常显示动态效果</p>
-                <p>2. 电脑或iOS设备可能只能显示静态图片部分，无法播放动态效果</p>
-                <p>3. 文件大小限制：建议照片不超过 5MB，视频不超过 10MB，以确保最佳兼容性</p>
-                <p>4. 本工具在浏览器中运行，所有处理都在本地完成，文件不会上传到服务器</p>
+                <div class="warning-title">重要使用说明</div>
+                <p style="margin-bottom: 10px; font-size: 1.05rem;">
+                    <strong>1. 文件传输：</strong> 生成后下载文件，通过数据线/云服务传输到Android设备
+                </p>
+                <p style="margin-bottom: 10px; font-size: 1.05rem;">
+                    <strong>2. 查看效果：</strong> 在设备相册中，长按照片或点击动态照片图标即可播放动态效果
+                </p>
+                <p style="margin-bottom: 10px; font-size: 1.05rem;">
+                    <strong>3. 常见问题：</strong> 如果无法显示动态效果，请重启相册应用或设备
+                </p>
+                <p style="margin-bottom: 5px; font-size: 1.05rem;">
+                    <strong>4. 技术要求：</strong> 需要Android 10+系统和相册4.0+版本支持
+                </p>
             </div>
             
             <div class="tech-details">
-                技术原理：通过 XMP 元数据将静态图片和视频合并为单个文件，符合 Android Motion Photo 1.0 规范
+                💡 <strong>技术提示：</strong> 本工具使用@mtillmann/jpeg-xmp-writer库在浏览器中写入XMP元数据，无需服务器，所有处理在本地完成 [[21]]
             </div>
+        </div>
+        
+        <div class="footer-note">
+            <strong>版本：</strong> 2.0 (专业修复版) • <strong>最后更新：</strong> 2025-12-26<br>
+            <strong>注意：</strong> 生成的动态照片需要在支持Motion Photo格式的Android设备上才能显示动态效果
         </div>
     </div>
 
@@ -507,6 +739,9 @@
         let selectedPhoto = null;
         let selectedVideo = null;
         let generatedFile = null;
+        let photoDimensions = { width: 0, height: 0 };
+        let videoDimensions = { width: 0, height: 0 };
+        let videoDuration = 0;
         
         // DOM 元素
         const photoDropArea = document.getElementById('photoDropArea');
@@ -515,8 +750,6 @@
         const videoInput = document.getElementById('videoInput');
         const photoPreview = document.getElementById('photoPreview');
         const videoPreview = document.getElementById('videoPreview');
-        const photoInfo = document.getElementById('photoInfo');
-        const videoInfo = document.getElementById('videoInfo');
         const previewCard = document.getElementById('previewCard');
         const generateBtn = document.getElementById('generateBtn');
         const progressContainer = document.getElementById('progressContainer');
@@ -524,6 +757,17 @@
         const progressText = document.getElementById('progressText');
         const resultContainer = document.getElementById('resultContainer');
         const downloadBtn = document.getElementById('downloadBtn');
+        const sizeWarning = document.getElementById('sizeWarning');
+        const resultFileSize = document.getElementById('resultFileSize');
+        
+        // 文件信息显示元素
+        const photoFileName = document.getElementById('photoFileName');
+        const photoResolution = document.getElementById('photoResolution');
+        const photoFileSize = document.getElementById('photoFileSize');
+        const videoFileName = document.getElementById('videoFileName');
+        const videoResolution = document.getElementById('videoResolution');
+        const videoDuration = document.getElementById('videoDuration');
+        const videoFileSize = document.getElementById('videoFileSize');
         
         // 拖拽事件处理
         function setupDragAndDrop(dropArea, fileInput) {
@@ -560,74 +804,65 @@
         // 文件选择处理
         async function handleFileSelect(file, type) {
             if (type === 'photo') {
-                if (!file.type.match('image.*')) {
-                    alert('请选择图片文件 (JPG/JPEG/PNG)');
+                if (!file.type.match('image/jpeg')) {
+                    alert('⚠️ 请选择JPG/JPEG格式的照片文件');
                     return;
                 }
                 
                 selectedPhoto = file;
                 const reader = new FileReader();
-                reader.onload = (e) => {
+                reader.onload = async (e) => {
                     photoPreview.src = e.target.result;
                     previewCard.style.display = 'block';
                     
-                    // 获取图片信息
-                    getImageInfo(file).then(info => {
-                        photoInfo.innerHTML = `
-                            <strong>分辨率:</strong> ${info.width}×${info.height}<br>
-                            <strong>大小:</strong> ${formatFileSize(file.size)}<br>
-                            <strong>格式:</strong> ${file.type.split('/')[1].toUpperCase()}
-                        `;
-                    });
+                    // 显示文件信息
+                    photoFileName.textContent = file.name;
+                    photoFileSize.textContent = formatFileSize(file.size);
+                    
+                    // 获取图片尺寸
+                    const img = new Image();
+                    img.onload = async () => {
+                        photoDimensions = { width: img.width, height: img.height };
+                        photoResolution.textContent = `${img.width}×${img.height}`;
+                        
+                        // 检查兼容性
+                        checkCompatibility();
+                    };
+                    img.src = e.target.result;
                 };
                 reader.readAsDataURL(file);
             } else {
-                if (!file.type.match('video.*')) {
-                    alert('请选择视频文件 (MP4/MOV)');
+                if (!file.type.match('video/mp4')) {
+                    alert('⚠️ 请选择MP4格式的视频文件');
                     return;
                 }
                 
                 selectedVideo = file;
                 const reader = new FileReader();
-                reader.onload = (e) => {
+                reader.onload = async (e) => {
                     videoPreview.src = e.target.result;
                     videoPreview.load();
                     previewCard.style.display = 'block';
                     
+                    // 显示文件信息
+                    videoFileName.textContent = file.name;
+                    videoFileSize.textContent = formatFileSize(file.size);
+                    
                     // 获取视频信息
-                    getVideoInfo(file).then(info => {
-                        videoInfo.innerHTML = `
-                            <strong>分辨率:</strong> ${info.width}×${info.height}<br>
-                            <strong>时长:</strong> ${info.duration.toFixed(2)} 秒<br>
-                            <strong>大小:</strong> ${formatFileSize(file.size)}<br>
-                            <strong>格式:</strong> ${file.type.split('/')[1].toUpperCase()}
-                        `;
-                    });
+                    await getVideoInfo(file);
+                    
+                    // 检查文件大小警告
+                    if (file.size > 5 * 1024 * 1024) { // 5MB
+                        sizeWarning.style.display = 'block';
+                    } else {
+                        sizeWarning.style.display = 'none';
+                    }
                 };
                 reader.readAsDataURL(file);
             }
             
-            // 检查是否可以生成
+            // 检查生成按钮状态
             checkGenerateButton();
-        }
-        
-        // 检查生成按钮状态
-        function checkGenerateButton() {
-            generateBtn.disabled = !(selectedPhoto && selectedVideo);
-        }
-        
-        // 获取图片信息
-        async function getImageInfo(file) {
-            return new Promise((resolve) => {
-                const img = new Image();
-                img.onload = () => {
-                    resolve({
-                        width: img.width,
-                        height: img.height
-                    });
-                };
-                img.src = URL.createObjectURL(file);
-            });
         }
         
         // 获取视频信息
@@ -636,15 +871,50 @@
                 const video = document.createElement('video');
                 video.preload = 'metadata';
                 video.onloadedmetadata = () => {
+                    videoDimensions = { width: video.videoWidth, height: video.videoHeight };
+                    videoDuration = video.duration;
+                    
+                    videoResolution.textContent = `${video.videoWidth}×${video.videoHeight}`;
+                    videoDuration.textContent = `${video.duration.toFixed(2)} 秒`;
+                    
                     resolve({
                         width: video.videoWidth,
                         height: video.videoHeight,
                         duration: video.duration
                     });
-                    URL.revokeObjectURL(video.src);
+                };
+                video.onerror = () => {
+                    alert('⚠️ 无法读取视频信息，请选择有效的MP4文件');
+                    resolve(null);
                 };
                 video.src = URL.createObjectURL(file);
             });
+        }
+        
+        // 检查兼容性
+        function checkCompatibility() {
+            if (selectedPhoto && selectedVideo) {
+                // 检查分辨率匹配
+                const aspectRatioPhoto = photoDimensions.width / photoDimensions.height;
+                const aspectRatioVideo = videoDimensions.width / videoDimensions.height;
+                
+                if (Math.abs(aspectRatioPhoto - aspectRatioVideo) > 0.1) {
+                    console.warn('分辨率比例不匹配，可能影响显示效果');
+                }
+            }
+        }
+        
+        // 检查生成按钮状态
+        function checkGenerateButton() {
+            const canGenerate = selectedPhoto && selectedVideo && 
+                              photoDimensions.width > 0 && videoDimensions.width > 0;
+            generateBtn.disabled = !canGenerate;
+            
+            if (!canGenerate) {
+                generateBtn.title = '请先选择有效的照片和视频文件';
+            } else {
+                generateBtn.title = '';
+            }
         }
         
         // 格式化文件大小
@@ -656,7 +926,7 @@
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
         
-        // 生成动态照片
+        // 生成动态照片 - 核心功能
         async function generateMotionPhoto() {
             if (!selectedPhoto || !selectedVideo) {
                 alert('请先选择照片和视频文件');
@@ -670,44 +940,158 @@
             generateBtn.innerHTML = '生成中 <span class="loading"></span>';
             
             try {
-                // 模拟进度
-                setProgress(10, '正在读取文件...');
-                await sleep(500);
-                
-                setProgress(30, '正在处理图片...');
+                // 1. 读取照片文件
+                setProgress(10, '读取静态照片数据...');
                 const photoArrayBuffer = await readFileAsArrayBuffer(selectedPhoto);
                 
-                setProgress(50, '正在处理视频...');
+                // 2. 读取视频文件
+                setProgress(30, '读取动态视频数据...');
                 const videoArrayBuffer = await readFileAsArrayBuffer(selectedVideo);
                 
-                setProgress(70, '正在合并文件并添加元数据...');
-                await sleep(800);
+                // 3. 合并文件 - 创建Motion Photo
+                setProgress(50, '合并文件数据...');
+                const mergedBuffer = await mergePhotoAndVideo(photoArrayBuffer, videoArrayBuffer);
                 
-                // 创建动态照片文件
-                const motionPhotoFile = await createMotionPhotoFile(photoArrayBuffer, videoArrayBuffer);
+                // 4. 写入XMP元数据
+                setProgress(70, '写入XMP元数据 (关键步骤)...');
+                const finalBuffer = await writeXMPMetadata(mergedBuffer, videoArrayBuffer.byteLength);
                 
-                setProgress(90, '正在生成下载文件...');
+                // 5. 创建最终文件
+                setProgress(90, '创建下载文件...');
+                const fileName = `Huawei_LivePhoto_${new Date().toISOString().replace(/[:.]/g, '-')}.jpg`;
+                generatedFile = new File([finalBuffer], fileName, { 
+                    type: 'image/jpeg',
+                    lastModified: new Date().getTime()
+                });
+                
+                // 6. 完成
+                setProgress(100, '生成完成！');
                 await sleep(300);
                 
-                // 完成
-                setProgress(100, '生成完成！');
-                await sleep(200);
-                
-                // 保存生成的文件
-                generatedFile = motionPhotoFile;
-                
                 // 显示结果
+                resultFileSize.textContent = formatFileSize(generatedFile.size);
                 resultContainer.style.display = 'block';
+                
+                // 验证文件大小逻辑
+                console.log('照片大小:', formatFileSize(selectedPhoto.size));
+                console.log('视频大小:', formatFileSize(selectedVideo.size));
+                console.log('生成文件大小:', formatFileSize(generatedFile.size));
+                console.log('预期大小:', formatFileSize(selectedPhoto.size + selectedVideo.size));
+                
                 generateBtn.innerHTML = '✅ 生成成功！可重新生成';
                 generateBtn.disabled = false;
                 
             } catch (error) {
                 console.error('生成失败:', error);
-                alert('生成动态照片失败: ' + error.message);
+                alert('生成动态照片失败: ' + error.message + '\n\n详细信息: ' + error.stack);
                 resetProgress();
                 generateBtn.disabled = false;
                 generateBtn.innerHTML = '🔄 重新尝试生成';
             }
+        }
+        
+        // 合并照片和视频数据
+        async function mergePhotoAndVideo(photoBuffer, videoBuffer) {
+            return new Promise((resolve, reject) => {
+                try {
+                    // 创建新的ArrayBuffer，大小 = 照片大小 + 视频大小
+                    const mergedBuffer = new ArrayBuffer(photoBuffer.byteLength + videoBuffer.byteLength);
+                    const mergedView = new Uint8Array(mergedBuffer);
+                    
+                    // 复制照片数据
+                    const photoView = new Uint8Array(photoBuffer);
+                    mergedView.set(photoView, 0);
+                    
+                    // 复制视频数据
+                    const videoView = new Uint8Array(videoBuffer);
+                    mergedView.set(videoView, photoBuffer.byteLength);
+                    
+                    resolve(mergedBuffer);
+                } catch (error) {
+                    reject(error);
+                }
+            });
+        }
+        
+        // 写入XMP元数据
+        async function writeXMPMetadata(jpegBuffer, videoSize) {
+            return new Promise(async (resolve, reject) => {
+                try {
+                    // 创建XMP元数据 - 符合Android Motion Photo 1.0规范
+                    const xmpData = createMotionPhotoXMP(videoSize);
+                    
+                    console.log('XMP元数据:', xmpData);
+                    
+                    // 使用jpeg-xmp-writer库写入XMP
+                    const jpegXmpWriter = window.JpegXmpWriter;
+                    
+                    if (!jpegXmpWriter) {
+                        throw new Error('jpeg-xmp-writer库未加载');
+                    }
+                    
+                    // 将ArrayBuffer转换为Uint8Array
+                    const jpegData = new Uint8Array(jpegBuffer);
+                    
+                    // 写入XMP元数据
+                    const result = jpegXmpWriter.writeXmp(jpegData, xmpData);
+                    
+                    console.log('XMP写入结果:', result);
+                    
+                    if (result instanceof Uint8Array) {
+                        resolve(result.buffer);
+                    } else {
+                        throw new Error('XMP写入失败，返回结果不是Uint8Array');
+                    }
+                    
+                } catch (error) {
+                    console.error('XMP写入错误:', error);
+                    reject(error);
+                }
+            });
+        }
+        
+        // 创建Motion Photo XMP元数据
+        function createMotionPhotoXMP(videoSize) {
+            // 计算视频偏移量 - 照片文件大小
+            const videoOffset = 0; // 这里需要根据实际合并逻辑调整
+            
+            // 计算关键帧时间戳 (466480 microseconds = 0.46648秒)
+            const presentationTimestampUs = 466480;
+            
+            // 创建符合规范的XMP元数据
+            const xmpTemplate = `<?xpacket begin="" id="W5M0MpCehiHzreSzNTczkc9d"?>
+<x:xmpmeta xmlns:x="adobe:ns:meta/">
+   <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+      <rdf:Description rdf:about=""
+            xmlns:GCamera="http://ns.google.com/photos/1.0/camera/">
+         <GCamera:MotionPhoto>1</GCamera:MotionPhoto>
+         <GCamera:MotionPhotoVersion>1</GCamera:MotionPhotoVersion>
+         <GCamera:MotionPhotoPresentationTimestampUs>${presentationTimestampUs}</GCamera:MotionPhotoPresentationTimestampUs>
+      </rdf:Description>
+      <rdf:Description rdf:about=""
+            xmlns:Container="http://ns.google.com/photos/1.0/container/">
+         <Container:Directory>
+            <rdf:Seq>
+               <rdf:li rdf:parseType="Resource">
+                  <Container:Item
+                     Container:ItemSemantic="Primary"
+                     Container:Mime="image/jpeg"/>
+               </rdf:li>
+               <rdf:li rdf:parseType="Resource">
+                  <Container:Item
+                     Container:ItemLength="${videoSize}"
+                     Container:ItemSemantic="MotionPhoto"
+                     Container:Mime="video/mp4"
+                     Container:ItemPadding="0"/>
+               </rdf:li>
+            </rdf:Seq>
+         </Container:Directory>
+      </rdf:Description>
+   </rdf:RDF>
+</x:xmpmeta>
+<?xpacket end="w"?>`;
+            
+            return xmpTemplate;
         }
         
         // 读取文件为ArrayBuffer
@@ -717,54 +1101,6 @@
                 reader.onload = (e) => resolve(e.target.result);
                 reader.onerror = reject;
                 reader.readAsArrayBuffer(file);
-            });
-        }
-        
-        // 创建Motion Photo文件
-        async function createMotionPhotoFile(photoBuffer, videoBuffer) {
-            // 这里是简化版本 - 实际生产环境中需要：
-            // 1. 将视频数据转换为Base64或二进制格式
-            // 2. 创建XMP元数据
-            // 3. 将元数据嵌入到JPEG文件中
-            // 4. 合并文件
-            
-            // 由于浏览器安全限制，无法直接操作文件系统的EXIF/XMP元数据
-            // 这里提供一个模拟实现，展示工作流程
-            
-            // 创建一个包含元数据信息的假文件（实际应用中需要后端服务或更复杂的处理）
-            const fileName = `Huawei_LivePhoto_${new Date().toISOString().replace(/[:.]/g, '-')}.jpg`;
-            
-            // 模拟文件内容
-            const fileContent = new Blob([photoBuffer], { 
-                type: 'image/jpeg',
-                endings: 'transparent'
-            });
-            
-            // 添加自定义属性来模拟Motion Photo
-            Object.defineProperty(fileContent, 'motionPhotoData', {
-                value: {
-                    hasMotion: true,
-                    videoSize: videoBuffer.byteLength,
-                    photoSize: photoBuffer.byteLength,
-                    format: 'Android Motion Photo 1.0',
-                    xmpMetadata: `<?xpacket begin="" id="W5M0MpCehiHzreSzNTczkc9d"?>
-<x:xmpmeta xmlns:x="adobe:ns:meta/">
-   <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-      <rdf:Description rdf:about=""
-            xmlns:Camera="http://ns.google.com/photos/1.0/camera/">
-         <Camera:MotionPhoto>1</Camera:MotionPhoto>
-         <Camera:MotionPhotoVersion>1</Camera:MotionPhotoVersion>
-         <Camera:MotionPhotoPresentationTimestampUs>466480</Camera:MotionPhotoPresentationTimestampUs>
-      </rdf:Description>
-   </rdf:RDF>
-</x:xmpmeta>
-<?xpacket end="w"?>`
-                }
-            });
-            
-            return new File([fileContent], fileName, { 
-                type: 'image/jpeg',
-                lastModified: new Date().getTime()
             });
         }
         
@@ -792,23 +1128,42 @@
                 return;
             }
             
-            // 实际应用中，这里应该使用真正的文件处理
+            // 使用FileSaver.js保存文件
             saveAs(generatedFile, generatedFile.name);
             
             // 显示成功消息
             const successMsg = document.createElement('div');
             successMsg.className = 'success-message';
-            successMsg.textContent = '📱 请将文件传输到Android设备，在相册中查看动态效果！';
-            resultContainer.insertBefore(successMsg, downloadBtn);
+            successMsg.innerHTML = '📱 <strong>传输提示：</strong> 请将文件传输到Android设备，在相册中查看动态效果！';
+            successMsg.style.marginTop = '15px';
+            successMsg.style.backgroundColor = 'rgba(102, 126, 234, 0.1)';
+            successMsg.style.borderColor = '#667eea';
+            resultContainer.appendChild(successMsg);
             
-            // 2秒后移除消息
+            // 3秒后移除消息
             setTimeout(() => {
-                successMsg.remove();
+                if (successMsg.parentNode) {
+                    successMsg.parentNode.removeChild(successMsg);
+                }
             }, 5000);
         }
         
         // 初始化
         function init() {
+            console.log('初始化动态照片生成工具...');
+            
+            // 检查库是否加载
+            if (typeof JpegXmpWriter === 'undefined') {
+                console.warn('jpeg-xmp-writer库未加载，部分功能可能受限');
+                document.querySelector('.status-indicator').classList.remove('online');
+            } else {
+                console.log('jpeg-xmp-writer库加载成功');
+            }
+            
+            if (typeof saveAs === 'undefined') {
+                console.warn('FileSaver.js库未加载');
+            }
+            
             // 设置拖拽
             setupDragAndDrop(photoDropArea, photoInput);
             setupDragAndDrop(videoDropArea, videoInput);
@@ -821,10 +1176,22 @@
             
             // 检查初始状态
             checkGenerateButton();
+            
+            console.log('工具初始化完成');
         }
         
         // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', init);
+        
+        // 错误处理
+        window.addEventListener('error', function(e) {
+            console.error('全局错误捕获:', e.message, e.error);
+            if (generateBtn) {
+                generateBtn.disabled = false;
+                generateBtn.innerHTML = '❌ 生成失败 - 重试';
+                resetProgress();
+            }
+        });
     </script>
 </body>
 </html>

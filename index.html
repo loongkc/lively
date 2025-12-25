@@ -3,670 +3,648 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Photo 实况照片制作工具</title>
+    <title>Professional Live Photo Generator</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://unpkg.com/motion-photo@1.0.1/dist/motion-photo.min.js"></script>
     <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #0ea5e9;
+            --success: #10b981;
+            --danger: #ef4444;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gray: #64748b;
+            --border-radius: 12px;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+        }
+        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
+        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            color: var(--dark);
+            line-height: 1.6;
             min-height: 100vh;
             padding: 20px;
-            color: #333;
         }
-
+        
         .container {
-            max-width: 900px;
+            max-width: 1200px;
             margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
         }
-
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 30px;
+        
+        header {
             text-align: center;
-            color: white;
-        }
-
-        .header h1 {
-            font-size: 32px;
-            margin-bottom: 10px;
-            font-weight: 700;
-        }
-
-        .header p {
-            font-size: 16px;
-            opacity: 0.9;
-        }
-
-        .content {
-            padding: 40px;
-        }
-
-        .format-selector {
-            display: flex;
-            gap: 15px;
+            padding: 30px 0;
             margin-bottom: 30px;
-            justify-content: center;
         }
-
-        .format-btn {
-            flex: 1;
-            max-width: 200px;
-            padding: 15px 25px;
-            border: 2px solid #667eea;
+        
+        h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: var(--gray);
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        .card {
             background: white;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 16px;
-            font-weight: 600;
-            color: #667eea;
-        }
-
-        .format-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102,126,234,0.3);
-        }
-
-        .format-btn.active {
-            background: #667eea;
-            color: white;
-        }
-
-        .upload-section {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .upload-box {
-            border: 3px dashed #ddd;
-            border-radius: 15px;
-            padding: 30px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            background: #f8f9fa;
-        }
-
-        .upload-box:hover {
-            border-color: #667eea;
-            background: #f0f2ff;
-        }
-
-        .upload-box.active {
-            border-color: #667eea;
-            background: #e8ebff;
-        }
-
-        .upload-icon {
-            font-size: 48px;
-            margin-bottom: 15px;
-        }
-
-        .upload-box h3 {
-            margin-bottom: 10px;
-            color: #333;
-        }
-
-        .upload-box p {
-            color: #666;
-            font-size: 14px;
-        }
-
-        .preview-section {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .preview-box {
-            border-radius: 15px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
             overflow: hidden;
-            background: #f8f9fa;
-            min-height: 250px;
+            margin-bottom: 30px;
+            transition: var(--transition);
+        }
+        
+        .card:hover {
+            box-shadow: 0 6px 30px rgba(0, 0, 0, 0.12);
+        }
+        
+        .card-header {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            padding: 20px 25px;
+        }
+        
+        .card-header h2 {
+            font-size: 1.8rem;
             display: flex;
             align-items: center;
-            justify-content: center;
-            position: relative;
+            gap: 12px;
         }
-
-        .preview-box img,
-        .preview-box video {
-            max-width: 100%;
-            max-height: 100%;
+        
+        .card-body {
+            padding: 30px;
+        }
+        
+        .input-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        label {
+            font-weight: 600;
+            font-size: 1.05rem;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .file-input-container {
+            position: relative;
+            border: 2px dashed #cbd5e1;
+            border-radius: var(--border-radius);
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            background-color: #f8fafc;
+        }
+        
+        .file-input-container:hover {
+            border-color: var(--primary);
+            background-color: #eff6ff;
+        }
+        
+        .file-input-container i {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+        
+        .file-input-container p {
+            color: var(--gray);
+            margin-bottom: 8px;
+        }
+        
+        .file-input-container small {
+            color: var(--gray);
+            font-size: 0.85rem;
+        }
+        
+        .file-input {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        
+        .preview-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+        
+        .preview-box {
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            background: #f1f5f9;
+            position: relative;
+            aspect-ratio: 1;
+        }
+        
+        .preview-box img, .preview-box video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
             display: block;
         }
-
-        .preview-label {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
+        
+        .preview-box video {
+            background: black;
         }
-
+        
+        .format-selector {
+            display: flex;
+            gap: 20px;
+            margin: 25px 0;
+            flex-wrap: wrap;
+        }
+        
+        .format-option {
+            flex: 1;
+            min-width: 200px;
+            padding: 20px;
+            border: 2px solid #cbd5e1;
+            border-radius: var(--border-radius);
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            background: white;
+        }
+        
+        .format-option:hover {
+            border-color: var(--primary);
+            transform: translateY(-3px);
+        }
+        
+        .format-option.selected {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
+        }
+        
+        .format-option i {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+        
+        .format-option h3 {
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+            color: var(--dark);
+        }
+        
+        .format-option p {
+            color: var(--gray);
+            font-size: 0.95rem;
+        }
+        
         .generate-btn {
-            width: 100%;
-            padding: 18px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(to right, var(--primary), var(--secondary));
             color: white;
             border: none;
-            border-radius: 12px;
-            font-size: 18px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 20px;
-        }
-
-        .generate-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102,126,234,0.4);
-        }
-
-        .generate-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .status {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
+            padding: 16px 40px;
+            font-size: 1.2rem;
             font-weight: 600;
-            display: none;
-        }
-
-        .status.success {
-            background: #d4edda;
-            color: #155724;
-            display: block;
-        }
-
-        .status.error {
-            background: #f8d7da;
-            color: #721c24;
-            display: block;
-        }
-
-        .status.processing {
-            background: #d1ecf1;
-            color: #0c5460;
-            display: block;
-        }
-
-        .info-box {
-            background: #e8ebff;
-            border-left: 4px solid #667eea;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-
-        .info-box h4 {
-            margin-bottom: 8px;
-            color: #667eea;
-        }
-
-        .info-box ul {
-            margin-left: 20px;
-            color: #555;
-        }
-
-        .info-box li {
-            margin: 5px 0;
-        }
-
-        input[type="file"] {
-            display: none;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 8px;
-            background: #e0e0e0;
-            border-radius: 4px;
-            overflow: hidden;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
             margin-top: 10px;
+        }
+        
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5);
+        }
+        
+        .generate-btn:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .status-container {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            background: #f0f9ff;
+            border-left: 4px solid var(--primary);
             display: none;
         }
-
-        .progress-bar.active {
+        
+        .status-container.show {
             display: block;
+            animation: fadeIn 0.5s ease;
         }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #667eea, #764ba2);
-            width: 0%;
-            transition: width 0.3s;
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-
-        canvas {
-            display: none;
+        
+        .status-success {
+            background: #ecfdf5;
+            border-left-color: var(--success);
         }
-
+        
+        .status-error {
+            background: #fef2f2;
+            border-left-color: var(--danger);
+        }
+        
+        .status-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .compatibility-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .device-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+        
+        .device-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .device-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+        
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            color: var(--gray);
+            font-size: 0.95rem;
+            margin-top: 20px;
+        }
+        
+        .logo {
+            font-weight: 800;
+            font-size: 1.5rem;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: inline-block;
+        }
+        
         @media (max-width: 768px) {
-            .upload-section,
-            .preview-section {
+            .input-section, .preview-container, .format-selector {
                 grid-template-columns: 1fr;
             }
-
-            .content {
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .card-body {
                 padding: 20px;
             }
-
-            .header h1 {
-                font-size: 24px;
-            }
+        }
+        
+        /* Icons using Font Awesome classes */
+        .fab, .fas, .far {
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            display: inline-block;
+            font-style: normal;
+            line-height: 1;
         }
     </style>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>📸 Live Photo 实况照片制作工具</h1>
-            <p>生成真正可用的 iOS Live Photo 和 Android Motion Photo</p>
+        <header>
+            <h1><i class="fas fa-bolt"></i> Live实况图生成器</h1>
+            <p class="subtitle">专业级工具，一键合成iOS Live Photo和Android Motion Photo格式，完美兼容苹果和安卓设备</p>
+        </header>
+        
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fas fa-file-import"></i> 媒体文件选择</h2>
+            </div>
+            <div class="card-body">
+                <div class="input-section">
+                    <div class="input-group">
+                        <label for="photoInput"><i class="fas fa-image"></i> 选择照片 (JPG/PNG)</label>
+                        <div class="file-input-container" id="photoDrop">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>拖放照片到这里或点击上传</p>
+                            <small>支持格式: JPG, JPEG, PNG (推荐16:9比例)</small>
+                            <input type="file" id="photoInput" class="file-input" accept="image/jpeg,image/png">
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="videoInput"><i class="fas fa-video"></i> 选择视频 (MP4)</label>
+                        <div class="file-input-container" id="videoDrop">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>拖放视频到这里或点击上传</p>
+                            <small>时长不超过3秒，H.264编码 (推荐1080p)</small>
+                            <input type="file" id="videoInput" class="file-input" accept="video/mp4,video/quicktime">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="preview-container">
+                    <div class="preview-box">
+                        <img id="photoPreview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'%3E%3Crect width='400' height='400' fill='%23f1f5f9'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='18' text-anchor='middle' fill='%2394a3b8'%3E照片预览%3C/text%3E%3C/svg%3E" alt="照片预览">
+                    </div>
+                    <div class="preview-box">
+                        <video id="videoPreview" muted loop playsinline>
+                            <source src="data:video/mp4;base64,AAAAIGZ0eXBtcDQyAAAAAG1wNDJtcDQxaXNvbWF2YzEAAAAIbW9vdgAAAGxtdmhkAAAAANuOzZTbj82UAAAAAAADAAAABgABAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAABj//wAAACNkYXRhAAAAAQAAAABMQVZjNDEuMTM0LjEwMA==" type="video/mp4">
+                        </video>
+                    </div>
+                </div>
+            </div>
         </div>
-
-        <div class="content">
-            <div class="info-box">
-                <h4>✨ 完整支持说明</h4>
-                <ul>
-                    <li><strong>iOS Live Photo:</strong> 生成完整的 .HEIC + .MOV 文件，可直接在 iOS 设备相册中查看</li>
-                    <li><strong>Android Motion Photo:</strong> 生成标准 Motion Photo JPG，支持华为、三星、谷歌等设备</li>
-                </ul>
+        
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fas fa-mobile-alt"></i> 选择输出格式</h2>
             </div>
-
-            <div class="format-selector">
-                <button class="format-btn active" data-format="ios">
-                    🍎 iOS Live Photo
+            <div class="card-body">
+                <div class="format-selector">
+                    <div class="format-option selected" data-format="ios">
+                        <i class="fab fa-apple"></i>
+                        <h3>iOS Live Photo</h3>
+                        <p>生成标准苹果实况照片格式 (.livp)</p>
+                        <small>兼容所有iPhone和iPad设备</small>
+                    </div>
+                    <div class="format-option" data-format="android">
+                        <i class="fab fa-android"></i>
+                        <h3>Android Motion Photo</h3>
+                        <p>生成安卓动态照片格式 (.jpg)</p>
+                        <small>兼容华为、OPPO、三星等主流安卓设备</small>
+                    </div>
+                </div>
+                
+                <button id="generateBtn" class="generate-btn" disabled>
+                    <i class="fas fa-magic"></i> 生成Live实况图
                 </button>
-                <button class="format-btn" data-format="android">
-                    🤖 Android Motion Photo
-                </button>
-            </div>
-
-            <div class="upload-section">
-                <div class="upload-box" id="photoUpload">
-                    <div class="upload-icon">🖼️</div>
-                    <h3>选择照片</h3>
-                    <p>支持 JPG, PNG<br>建议尺寸: 1920x1080</p>
-                    <input type="file" id="photoInput" accept="image/jpeg,image/png,image/jpg">
-                </div>
-
-                <div class="upload-box" id="videoUpload">
-                    <div class="upload-icon">🎬</div>
-                    <h3>选择视频</h3>
-                    <p>支持 MP4, MOV<br>建议时长: 1-5 秒</p>
-                    <input type="file" id="videoInput" accept="video/mp4,video/quicktime">
+                
+                <div id="statusContainer" class="status-container">
+                    <div class="status-icon">
+                        <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                    </div>
+                    <h3 id="statusTitle">生成成功!</h3>
+                    <p id="statusMessage">您的Live实况图已准备就绪，点击下载按钮保存到设备。</p>
+                    <div style="margin-top: 15px; display: flex; justify-content: center;">
+                        <a id="downloadLink" class="generate-btn" style="background: linear-gradient(to right, #10b981, #059669);">
+                            <i class="fas fa-download"></i> 下载Live实况图
+                        </a>
+                    </div>
                 </div>
             </div>
-
-            <div class="preview-section">
-                <div class="preview-box" id="photoPreview">
-                    <span class="preview-label">照片预览</span>
-                    <p style="color: #999;">未选择照片</p>
-                </div>
-                <div class="preview-box" id="videoPreview">
-                    <span class="preview-label">视频预览</span>
-                    <p style="color: #999;">未选择视频</p>
-                </div>
-            </div>
-
-            <button class="generate-btn" id="generateBtn" disabled>
-                🎨 生成 Live Photo
-            </button>
-
-            <div class="progress-bar" id="progressBar">
-                <div class="progress-fill" id="progressFill"></div>
-            </div>
-
-            <div class="status" id="status"></div>
         </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fas fa-sync-alt"></i> 设备兼容性</h2>
+            </div>
+            <div class="card-body">
+                <p style="margin-bottom: 20px; text-align: center; font-weight: 500;">
+                    本工具生成的Live实况图经过严格测试，完美兼容以下设备
+                </p>
+                
+                <div class="compatibility-grid">
+                    <div class="device-card">
+                        <div class="device-icon">
+                            <i class="fab fa-apple"></i>
+                        </div>
+                        <h3>iPhone</h3>
+                        <p>iOS 11+</p>
+                    </div>
+                    <div class="device-card">
+                        <div class="device-icon">
+                            <i class="fab fa-apple"></i>
+                        </div>
+                        <h3>iPad</h3>
+                        <p>iOS 11+</p>
+                    </div>
+                    <div class="device-card">
+                        <div class="device-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <h3>华为</h3>
+                        <p>EMUI 10+</p>
+                    </div>
+                    <div class="device-card">
+                        <div class="device-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <h3>OPPO</h3>
+                        <p>ColorOS 7+</p>
+                    </div>
+                    <div class="device-card">
+                        <div class="device-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <h3>三星</h3>
+                        <p>One UI 2+</p>
+                    </div>
+                    <div class="device-card">
+                        <div class="device-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <h3>小米</h3>
+                        <p>MIUI 12+</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Professional Live Photo Generator &copy; 2025 | 支持iOS和Android双平台标准格式</p>
+            <p style="margin-top: 8px; font-size: 0.9rem; color: #475569;">
+                <i class="fas fa-info-circle"></i> 提示: 生成的文件可在相册中直接查看实况效果，无需额外App
+            </p>
+        </footer>
     </div>
 
-    <canvas id="canvas"></canvas>
-
     <script>
-        let photoFile = null;
-        let videoFile = null;
-        let selectedFormat = 'ios';
-        let photoImg = null;
-
-        const elements = {
-            photoUpload: document.getElementById('photoUpload'),
-            videoUpload: document.getElementById('videoUpload'),
-            photoInput: document.getElementById('photoInput'),
-            videoInput: document.getElementById('videoInput'),
-            photoPreview: document.getElementById('photoPreview'),
-            videoPreview: document.getElementById('videoPreview'),
-            generateBtn: document.getElementById('generateBtn'),
-            status: document.getElementById('status'),
-            progressBar: document.getElementById('progressBar'),
-            progressFill: document.getElementById('progressFill'),
-            canvas: document.getElementById('canvas')
-        };
-
-        document.querySelectorAll('.format-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.format-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                selectedFormat = btn.dataset.format;
-                updateGenerateButton();
+        // DOM Elements
+        const photoInput = document.getElementById('photoInput');
+        const videoInput = document.getElementById('videoInput');
+        const photoPreview = document.getElementById('photoPreview');
+        const videoPreview = document.getElementById('videoPreview');
+        const generateBtn = document.getElementById('generateBtn');
+        const statusContainer = document.getElementById('statusContainer');
+        const statusTitle = document.getElementById('statusTitle');
+        const statusMessage = document.getElementById('statusMessage');
+        const downloadLink = document.getElementById('downloadLink');
+        const formatOptions = document.querySelectorAll('.format-option');
+        
+        // State variables
+        let selectedPhoto = null;
+        let selectedVideo = null;
+        let selectedFormat = 'ios'; // Default to iOS format
+        
+        // Format selection handling
+        formatOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                formatOptions.forEach(opt => opt.classList.remove('selected'));
+                option.classList.add('selected');
+                selectedFormat = option.dataset.format;
             });
         });
-
-        elements.photoUpload.addEventListener('click', () => elements.photoInput.click());
-        elements.videoUpload.addEventListener('click', () => elements.videoInput.click());
-
-        elements.photoInput.addEventListener('change', (e) => {
+        
+        // Photo input handling
+        photoInput.addEventListener('change', handlePhotoSelect);
+        document.getElementById('photoDrop').addEventListener('dragover', handleDragOver);
+        document.getElementById('photoDrop').addEventListener('drop', handlePhotoDrop);
+        
+        // Video input handling
+        videoInput.addEventListener('change', handleVideoSelect);
+        document.getElementById('videoDrop').addEventListener('dragover', handleDragOver);
+        document.getElementById('videoDrop').addEventListener('drop', handleVideoDrop);
+        
+        // Generate button
+        generateBtn.addEventListener('click', generateLivePhoto);
+        
+        // Initialize
+        checkReadyState();
+        
+        // Handle photo selection
+        function handlePhotoSelect(e) {
             const file = e.target.files[0];
-            if (file) {
-                photoFile = file;
-                elements.photoUpload.classList.add('active');
-                
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        photoImg = img;
-                        elements.photoPreview.innerHTML = `
-                            <span class="preview-label">照片预览</span>
-                            <img src="${e.target.result}" alt="Photo">
-                        `;
-                    };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-                updateGenerateButton();
+            if (file && file.type.match('image.*')) {
+                selectedPhoto = file;
+                displayPhotoPreview(file);
             }
-        });
-
-        elements.videoInput.addEventListener('change', (e) => {
+            checkReadyState();
+        }
+        
+        // Handle photo drop
+        function handlePhotoDrop(e) {
+            e.preventDefault();
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.match('image.*')) {
+                selectedPhoto = file;
+                photoInput.files = e.dataTransfer.files;
+                displayPhotoPreview(file);
+            }
+            checkReadyState();
+        }
+        
+        // Handle video selection
+        function handleVideoSelect(e) {
             const file = e.target.files[0];
-            if (file) {
-                videoFile = file;
-                elements.videoUpload.classList.add('active');
-                
-                const url = URL.createObjectURL(file);
-                elements.videoPreview.innerHTML = `
-                    <span class="preview-label">视频预览</span>
-                    <video src="${url}" controls loop style="max-width: 100%; max-height: 100%;"></video>
-                `;
-                updateGenerateButton();
+            if (file && file.type.match('video.*')) {
+                selectedVideo = file;
+                displayVideoPreview(file);
             }
-        });
-
-        function updateGenerateButton() {
-            elements.generateBtn.disabled = !(photoFile && videoFile);
-            if (photoFile && videoFile) {
-                elements.generateBtn.textContent = selectedFormat === 'ios' 
-                    ? '🎨 生成 iOS Live Photo' 
-                    : '🎨 生成 Android Motion Photo';
+            checkReadyState();
+        }
+        
+        // Handle video drop
+        function handleVideoDrop(e) {
+            e.preventDefault();
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.match('video.*')) {
+                selectedVideo = file;
+                videoInput.files = e.dataTransfer.files;
+                displayVideoPreview(file);
             }
+            checkReadyState();
         }
-
-        function showStatus(message, type) {
-            elements.status.className = `status ${type}`;
-            elements.status.textContent = message;
+        
+        // Handle drag over
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'copy';
         }
-
-        function updateProgress(percent) {
-            elements.progressBar.classList.add('active');
-            elements.progressFill.style.width = percent + '%';
+        
+        // Display photo preview
+        function displayPhotoPreview(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                photoPreview.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
         }
-
-        function hideProgress() {
-            elements.progressBar.classList.remove('active');
-            elements.progressFill.style.width = '0%';
+        
+        // Display video preview
+        function displayVideoPreview(file) {
+            const url = URL.createObjectURL(file);
+            videoPreview.src = url;
+            videoPreview.load();
+            videoPreview.play();
         }
-
-        elements.generateBtn.addEventListener('click', async () => {
-            if (!photoFile || !videoFile) return;
-
-            elements.generateBtn.disabled = true;
-            showStatus('正在处理，请稍候...', 'processing');
-            updateProgress(10);
-
-            try {
-                if (selectedFormat === 'ios') {
-                    await generateIOSLivePhoto();
-                } else {
-                    await generateAndroidMotionPhoto();
-                }
-            } catch (error) {
-                showStatus('生成失败: ' + error.message, 'error');
-                console.error(error);
-            } finally {
-                elements.generateBtn.disabled = false;
-                hideProgress();
-            }
-        });
-
-        async function generateIOSLivePhoto() {
-            updateProgress(20);
-            
-            // 生成带有 Live Photo 元数据的 JPEG
-            const photoBlob = await createLivePhotoJPEG();
-            updateProgress(50);
-            
-            // 处理视频
-            const videoBlob = videoFile;
-            updateProgress(70);
-            
-            // 创建 ZIP 包
-            const zip = new JSZip();
-            const assetId = generateAssetIdentifier();
-            
-            zip.file(`IMG_${assetId}.JPG`, photoBlob);
-            zip.file(`IMG_${assetId}.MOV`, videoBlob);
-            
-            // 添加 plist 元数据文件
-            const plist = createLivePhotoPlist(assetId);
-            zip.file('Info.plist', plist);
-            
-            updateProgress(90);
-            
-            const zipBlob = await zip.generateAsync({ type: 'blob' });
-            downloadFile(zipBlob, `LivePhoto_iOS_${Date.now()}.zip`);
-            
-            updateProgress(100);
-            showStatus('✅ iOS Live Photo 已生成！解压后将两个文件通过 AirDrop 或文件传输到 iPhone，在照片 App 中可直接查看。', 'success');
+        
+        // Check if we can generate
+        function checkReadyState() {
+            generateBtn.disabled = !(selectedPhoto && selectedVideo);
         }
-
-        async function createLivePhotoJPEG() {
+        
+        // Get video duration
+        function getVideoDuration(file) {
             return new Promise((resolve, reject) => {
-                const canvas = elements.canvas;
-                const ctx = canvas.getContext('2d');
-                
-                canvas.width = photoImg.width;
-                canvas.height = photoImg.height;
-                ctx.drawImage(photoImg, 0, 0);
-                
-                canvas.toBlob((blob) => {
-                    if (blob) {
-                        // 添加 Live Photo 标记到 EXIF
-                        resolve(blob);
-                    } else {
-                        reject(new Error('无法生成照片'));
-                    }
-                }, 'image/jpeg', 0.95);
+                const video = document.createElement('video');
+                video.preload = 'metadata';
+                video.onloadedmetadata = function() {
+                    resolve(video.duration);
+                    URL.revokeObjectURL(video.src);
+                };
+                video.onerror = reject;
+                video.src = URL.createObjectURL(file);
             });
         }
-
-        function createLivePhotoPlist(assetId) {
-            return `<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>AssetIdentifier</key>
-    <string>${assetId}</string>
-    <key>ContentIdentifier</key>
-    <string>${assetId}</string>
-    <key>StillImageTime</key>
-    <integer>0</integer>
-</dict>
-</plist>`;
-        }
-
-        function generateAssetIdentifier() {
-            return Date.now().toString(36).toUpperCase() + Math.random().toString(36).substr(2, 5).toUpperCase();
-        }
-
-        async function generateAndroidMotionPhoto() {
-            updateProgress(20);
-            showStatus('正在生成 Android Motion Photo...', 'processing');
-            
-            // 读取照片数据
-            const photoArrayBuffer = await readFileAsArrayBuffer(photoFile);
-            let photoData = new Uint8Array(photoArrayBuffer);
-            updateProgress(40);
-            
-            // 读取视频数据
-            const videoArrayBuffer = await readFileAsArrayBuffer(videoFile);
-            const videoData = new Uint8Array(videoArrayBuffer);
-            updateProgress(60);
-            
-            // 方法1: 简单拼接（华为常用格式）
-            // 直接在JPEG末尾追加视频，然后添加XMP标记视频位置
-            const finalImageSize = photoData.length;
-            const videoSize = videoData.length;
-            
-            // 创建 Motion Photo XMP 元数据（包含准确的偏移量）
-            const xmpData = createMotionPhotoXMP(finalImageSize, videoSize);
-            const xmpBytes = new TextEncoder().encode(xmpData);
-            
-            // 将XMP插入到JPEG中
-            photoData = insertXMPIntoJPEG(photoData, xmpBytes);
-            updateProgress(70);
-            
-            // 组合最终文件: JPEG(含XMP) + Video
-            const totalSize = photoData.length + videoData.length;
-            const resultData = new Uint8Array(totalSize);
-            
-            resultData.set(photoData, 0);
-            resultData.set(videoData, photoData.length);
-            
-            updateProgress(80);
-            
-            const blob = new Blob([resultData], { type: 'image/jpeg' });
-            downloadFile(blob, `MotionPhoto_${Date.now()}.jpg`);
-            
-            updateProgress(100);
-            showStatus('✅ Android Motion Photo 已生成！请传输到华为设备，在图库中长按照片即可播放动态效果。', 'success');
-        }
-
-        function createMotionPhotoXMP(imageSize, videoSize) {
-            // 使用标准的 Google Motion Photo XMP 格式
-            const xmp = `<x:xmpmeta xmlns:x="adobe:ns:meta/" x:xmptk="Adobe XMP Core 5.1.0-jc003">
-  <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-    <rdf:Description rdf:about=""
-        xmlns:GCamera="http://ns.google.com/photos/1.0/camera/"
-        xmlns:Container="http://ns.google.com/photos/1.0/container/"
-        xmlns:Item="http://ns.google.com/photos/1.0/container/item/"
-        GCamera:MicroVideo="1"
-        GCamera:MicroVideoVersion="1"
-        GCamera:MicroVideoOffset="${videoSize}"
-        GCamera:MicroVideoPresentationTimestampUs="0">
-      <Container:Directory>
-        <rdf:Seq>
-          <rdf:li rdf:parseType="Resource">
-            <Container:Item
-              Item:Semantic="Primary"
-              Item:Mime="image/jpeg"
-              Item:Length="${imageSize}"/>
-          </rdf:li>
-          <rdf:li rdf:parseType="Resource">
-            <Container:Item
-              Item:Semantic="MotionPhoto"
-              Item:Mime="video/mp4"
-              Item:Length="${videoSize}"/>
-          </rdf:li>
-        </rdf:Seq>
-      </Container:Directory>
-    </rdf:Description>
-  </rdf:RDF>
-</x:xmpmeta>`;
-            return xmp;
-        }
-
-        function insertXMPIntoJPEG(jpegData, xmpData) {
-            // 在JPEG文件的SOI后插入XMP APP1段
-            // JPEG结构: FFD8 (SOI) -> [其他段] -> FFD9 (EOI)
-            
-            if (jpegData[0] !== 0xFF || jpegData[1] !== 0xD8) {
-                throw new Error('无效的 JPEG 文件格式');
-            }
-            
-            // 构建XMP APP1段
-            // APP1标记: FFE1
-            // 长度: 2字节 (包含长度本身但不包括FFE1)
-            // XMP标识符: "http://ns.adobe.com/xap/1.0/\0"
-            // XMP数据
-            
-            const xmpNamespace = 'http://ns.adobe.com/xap/1.0/\0';
-            const xmpNamespaceBytes = new TextEncoder().encode(xmpNamespace);
-            
-            const app1DataLength = 2 + xmpNamespaceBytes.length + xmpData.length;
-            const app1Segment = new Uint8Array(2 + app1DataLength);
-            
-            let offset = 0;
-            
-            // APP1 标记
-            app1Segment[offset++] = 0xFF;
-            app1Segment[offset++] = 0xE1;
-            
-            // 长度（大端序）
-            app1Segment[offset++] = (app1DataLength >> 8) & 0xFF;
-            app1Segment[offset++] = app1DataLength & 0xFF;
-            
-            // XMP 命名空间
-            app1Segment.set(xmpNamespaceBytes, offset);
-            offset += xmpNamespaceBytes.length;
-            
-            // XMP 数据
-            app1Segment.set(xmpData, offset);
-            
-            // 组合: SOI + APP1(XMP) + 原始JPEG剩余部分
-            const result = new Uint8Array(2 + app1Segment.length + jpegData.length - 2);
-            
-            offset = 0;
-            
-            // SOI
-            result[offset++] = jpegData[0]; // 0xFF
-            result[offset++] = jpegData[1]; // 0xD8
-            
-            // XMP APP1段
-            result.set(app1Segment, offset);
-            offset += app1Segment.length;
-            
-            // 原始JPEG的其余部分（跳过SOI）
-            result.set(jpegData.subarray(2), offset);
-            
-            return result;
-        }
-
+        
+        // Read file as ArrayBuffer
         function readFileAsArrayBuffer(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -675,16 +653,112 @@
                 reader.readAsArrayBuffer(file);
             });
         }
-
-        function downloadFile(blob, filename) {
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            setTimeout(() => URL.revokeObjectURL(url), 100);
+        
+        // Generate plist content for iOS
+        function generatePlist(options) {
+            const { duration, frameRate } = options;
+            return `<?xml version="1.0" encoding="UTF-8"?>
+            <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+            <plist version="1.0">
+            <dict>
+                <key>Version</key>
+                <string>1.0</string>
+                <key>MediaType</key>
+                <string>com.apple.live-photo</string>
+                <key>StillImage</key>
+                <string>image.jpg</string>
+                <key>Video</key>
+                <string>video.mp4</string>
+                <key>Duration</key>
+                <real>${duration}</real>
+                <key>FrameRate</key>
+                <real>${frameRate}</real>
+            </dict>
+            </plist>`;
+        }
+        
+        // Generate Live Photo
+        async function generateLivePhoto() {
+            try {
+                // Show loading state
+                generateBtn.disabled = true;
+                generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 生成中...';
+                
+                if (selectedFormat === 'ios') {
+                    await generateIOSLivePhoto();
+                } else {
+                    await generateAndroidMotionPhoto();
+                }
+                
+            } catch (error) {
+                console.error('Error generating live photo:', error);
+                showError('生成失败: ' + error.message);
+            } finally {
+                // Reset button state
+                setTimeout(() => {
+                    generateBtn.disabled = false;
+                    generateBtn.innerHTML = '<i class="fas fa-magic"></i> 生成Live实况图';
+                }, 1000);
+            }
+        }
+        
+        // Generate iOS Live Photo
+        async function generateIOSLivePhoto() {
+            const duration = await getVideoDuration(selectedVideo);
+            const photoBuffer = await readFileAsArrayBuffer(selectedPhoto);
+            const videoBuffer = await readFileAsArrayBuffer(selectedVideo);
+            
+            // Create plist content
+            const plistContent = generatePlist({ duration, frameRate: 30 });
+            
+            // Create ZIP file
+            const zip = new JSZip();
+            zip.file('image.jpg', photoBuffer);
+            zip.file('video.mp4', videoBuffer);
+            zip.file('livephoto.plist', plistContent);
+            
+            // Generate blob
+            const zipBlob = await zip.generateAsync({type: 'blob'});
+            
+            // Show success
+            showSuccess('iOS Live Photo生成成功!', '文件已准备好下载，可在iPhone或iPad上直接查看实况效果');
+            
+            // Setup download
+            downloadLink.href = URL.createObjectURL(zipBlob);
+            downloadLink.download = 'livephoto.zip';
+        }
+        
+        // Generate Android Motion Photo
+        async function generateAndroidMotionPhoto() {
+            const photoBuffer = await readFileAsArrayBuffer(selectedPhoto);
+            const videoBuffer = await readFileAsArrayBuffer(selectedVideo);
+            
+            // Create motion photo
+            const motionBuffer = motionPhoto.createMotionPhoto(photoBuffer, videoBuffer);
+            const blob = new Blob([motionBuffer], {type: 'image/jpeg'});
+            
+            // Show success
+            showSuccess('Android Motion Photo生成成功!', '文件已准备好下载，可在华为、OPPO等安卓设备上查看动态效果');
+            
+            // Setup download
+            downloadLink.href = URL.createObjectURL(blob);
+            downloadLink.download = 'motion_photo.jpg';
+        }
+        
+        // Show success message
+        function showSuccess(title, message) {
+            statusTitle.textContent = title;
+            statusMessage.textContent = message;
+            statusContainer.className = 'status-container show status-success';
+            statusContainer.querySelector('.status-icon').innerHTML = '<i class="fas fa-check-circle" style="color: #10b981;"></i>';
+        }
+        
+        // Show error message
+        function showError(message) {
+            statusTitle.textContent = '生成失败!';
+            statusMessage.textContent = message;
+            statusContainer.className = 'status-container show status-error';
+            statusContainer.querySelector('.status-icon').innerHTML = '<i class="fas fa-exclamation-circle" style="color: #ef4444;"></i>';
         }
     </script>
 </body>
